@@ -5,6 +5,7 @@ from pathlib import Path
 
 from offline_confluence.auth import load_credentials
 from offline_confluence.confluence import ConfluenceClient
+from offline_confluence.format import compact, prettify
 
 META_PATTERN = re.compile(r"<!--\s*confluence-meta:\s*(\{.*?\})\s*-->", re.DOTALL)
 
@@ -30,7 +31,8 @@ def main() -> None:
     base_url = meta["base_url"]
     title = meta["title"]
 
-    body = META_PATTERN.sub("", raw).lstrip("\n")
+    pretty_body = META_PATTERN.sub("", raw).lstrip("\n")
+    body = compact(pretty_body)
 
     email, token = load_credentials()
     client = ConfluenceClient(base_url, email, token)
@@ -49,7 +51,7 @@ def main() -> None:
 
     meta["version"] = new_version
     updated_meta = json.dumps(meta)
-    filepath.write_text(f"<!-- confluence-meta: {updated_meta} -->\n{body}", encoding="utf-8")
+    filepath.write_text(f"<!-- confluence-meta: {updated_meta} -->\n{prettify(body)}", encoding="utf-8")
     print(f"Updated '{title}' to version {new_version}.")
 
 
