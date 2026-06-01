@@ -3,15 +3,15 @@ import re
 import sys
 from pathlib import Path
 
-from auth import load_credentials
-from confluence import ConfluenceClient
+from offline_confluence.auth import load_credentials
+from offline_confluence.confluence import ConfluenceClient
 
 META_PATTERN = re.compile(r"<!--\s*confluence-meta:\s*(\{.*?\})\s*-->", re.DOTALL)
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: uv run python push <path/to/local/page>", file=sys.stderr)
+        print("Usage: push <path/to/local/page>", file=sys.stderr)
         sys.exit(1)
 
     filepath = Path(sys.argv[1])

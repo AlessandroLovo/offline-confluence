@@ -4,8 +4,8 @@ import re
 import sys
 from urllib.parse import urlparse
 
-from auth import load_credentials
-from confluence import ConfluenceClient
+from offline_confluence.auth import load_credentials
+from offline_confluence.confluence import ConfluenceClient
 
 
 def parse_url(url: str) -> tuple[str, str, str]:
@@ -23,7 +23,7 @@ def slugify(title: str) -> str:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: uv run python pull <page_url>", file=sys.stderr)
+        print("Usage: pull <page_url>", file=sys.stderr)
         sys.exit(1)
 
     url = sys.argv[1]
