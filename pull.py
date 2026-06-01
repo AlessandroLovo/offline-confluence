@@ -8,13 +8,13 @@ from auth import load_credentials
 from confluence import ConfluenceClient
 
 
-def parse_url(url: str) -> tuple[str, str]:
+def parse_url(url: str) -> tuple[str, str, str]:
     parsed = urlparse(url)
-    match = re.search(r"/pages/(\d+)", parsed.path)
+    match = re.search(r"/spaces/([^/]+)/pages/(\d+)", parsed.path)
     if not match:
-        raise RuntimeError(f"Cannot extract page ID from URL: {url}\nExpected a URL like .../pages/123456789/...")
+        raise RuntimeError(f"Cannot extract space/page ID from URL: {url}\nExpected a URL like .../spaces/SPACE/pages/123456789/...")
     base_url = f"{parsed.scheme}://{parsed.netloc}"
-    return base_url, match.group(1)
+    return base_url, match.group(1), match.group(2)
 
 
 def slugify(title: str) -> str:
@@ -27,18 +27,18 @@ def main() -> None:
         sys.exit(1)
 
     url = sys.argv[1]
-    base_url, page_id = parse_url(url)
+    base_url, space_key, page_id = parse_url(url)
 
     email, token = load_credentials()
     client = ConfluenceClient(base_url, email, token)
     page = client.get_page(page_id)
 
-    meta = json.dumps({"page_id": page["id"], "base_url": base_url, "title": page["title"]})
+    meta = json.dumps({"page_id": page["id"], "base_url": base_url, "title": page["title"], "version": page["version_number"]})
     content = f"<!-- confluence-meta: {meta} -->\n{page['body_storage']}"
 
-    pages_dir = pathlib.Path("pages")
-    pages_dir.mkdir(exist_ok=True)
-    filename = pages_dir / f"{page_id}_{slugify(page['title'])}.html"
+    space_dir = pathlib.Path("pages") / space_key
+    space_dir.mkdir(parents=True, exist_ok=True)
+    filename = space_dir / f"{slugify(page['title'])}-{page_id}.html"
     filename.write_text(content, encoding="utf-8")
     print(f"Saved: {filename}")
 

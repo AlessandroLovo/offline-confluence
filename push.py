@@ -36,8 +36,20 @@ def main() -> None:
     client = ConfluenceClient(base_url, email, token)
 
     current = client.get_page(page_id)
+    local_version = meta.get("version")
+    if local_version is not None and current["version_number"] != local_version:
+        print(
+            f"Aborted: page was updated remotely (local version {local_version}, "
+            f"remote version {current['version_number']}). Re-pull before pushing.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     new_version = current["version_number"] + 1
     client.update_page(page_id, title, body, new_version)
+
+    meta["version"] = new_version
+    updated_meta = json.dumps(meta)
+    filepath.write_text(f"<!-- confluence-meta: {updated_meta} -->\n{body}", encoding="utf-8")
     print(f"Updated '{title}' to version {new_version}.")
 
 
